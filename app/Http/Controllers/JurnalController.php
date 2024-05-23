@@ -4,30 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Jurnal;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
 
 class JurnalController extends Controller
 {
-    private function saveImage($requestImageFile)
-    {
-        $currentId = count(Jurnal::withoutTrashed()->get()) + 1;
-        $imgFile = $requestImageFile;
-        $imgFilename = $currentId . '_wrapper_jurnal' .  '.' . $imgFile->getClientOriginalExtension();
-        $img = Image::read($imgFile);
-        $img->resize(175, 260);
-
-        $path = public_path('storage/jurnals/images/' . $imgFilename);
-        $img->save($path, 100);
-        return $imgFilename;
-    }
-    private function saveDocument($requestDcoumentFile)
-    {
-        $currentId = count(Jurnal::withoutTrashed()->get()) + 1;
-        $file = $requestDcoumentFile;
-        $filename = $currentId . '_jurnal' . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('jurnals/documents/', $filename, 'public');
-        return $filename;
-    }
     /**
      * Display a listing of the resource.
      */
@@ -49,8 +30,9 @@ class JurnalController extends Controller
         ]);
         if ($valudate) {
             if ($request->hasFile('image') && $request->hasFile('jurnal')) {
-                $imgName = $this->saveImage($request->file('image'));
-                $jurnalName = $this->saveDocument($request->file('jurnal'));
+                $currentId = Jurnal::withTrashed()->count() + 1;
+                $imgName = $this->saveStorageData($request->file('image'), 'image', 'jurnals/images/', '_wrapper_jurnal', $currentId, null, 175, 260);
+                $jurnalName = $this->saveStorageData($request->file('jurnal'), 'document', 'jurnals/documents/', '_jurnal', $currentId);
                 $jurnal = Jurnal::firstOrCreate([
                     'year' => $request['year'],
                     'title' => $request['title'],
@@ -80,7 +62,26 @@ class JurnalController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $valudate = $request->validate([
+            'year' => 'required|integer',
+            'title' => 'required',
+            'jurnal' => 'required',
+            'image' => 'required',
+        ]);
+        if ($valudate) {
+            if ($request->hasFile('image') && $request->hasFile('jurnal')) {
+                $currentId = Jurnal::withTrashed()->count() + 1;
+                $jurnal = Jurnal::find($id);
+                $imgName = $this->saveStorageData($request->file('image'), 'image', 'jurnals/images/', '_wrapper_jurnal', $currentId, $jurnal, 175, 260);
+                $jurnalName = $this->saveStorageData($request->file('jurnal'), 'document', 'jurnals/documents/', '_jurnal', $currentId, $jurnal);
+                $jurnal->title = $request->title;
+                $jurnal->year = $request->year;
+                $jurnal->image = $imgName;
+                $jurnal->jurnal = $jurnalName;
+                $jurnal->update();
+                return response()->json(['jurnal' => $jurnal, 'query' => 'ok'], 200);
+            }
+        }
     }
 
     /**
@@ -88,27 +89,33 @@ class JurnalController extends Controller
      */
     public function destroy(string $id)
     {
-        //
-    }
-    public function  document(string $id, string $document_name)
-    {
-        $jurnal = Jurnal::find($id);
-        if ($jurnal) {
-            return response()->file(storage_path('app/public/jurnals/documents/' . $document_name));
+        $is_delete =  Jurnal::find($id)->delete();
+        if ($is_delete) {
+            return response()->json(['message' => 'jurnal deleted'], 200);
         } else {
             return response()->json(['message' => 'jurnal not found'], 404);
         }
     }
-    public function  getImage(string $id, string $image_name)
+    public function  document(string $id)
     {
         $jurnal = Jurnal::find($id);
         if ($jurnal) {
-            return response()->file(storage_path('app/public/jurnals/images/' . $image_name));
+            return response()->file(storage_path('app/public/jurnals/documents/' . $jurnal->jurnal));
         } else {
             return response()->json(['message' => 'jurnal not found'], 404);
         }
     }
-    public function documentDownload(string $id, string $document_name) {
+    public function  getImage(string $id)
+    {
+        $jurnal = Jurnal::find($id);
+        if ($jurnal) {
+            return response()->file(storage_path('app/public/jurnals/images/' . $jurnal->image));
+        } else {
+            return response()->json(['message' => 'image jurnal not found'], 404);
+        }
+    }
+    public function documentDownload(string $id, string $document_name)
+    {
         $jurnal = Jurnal::find($id);
         if ($jurnal) {
             return response()->download(storage_path('app/public/jurnals/documents/' . $document_name));

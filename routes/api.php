@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\EditingPersonCategory;
+use App\Http\Controllers\EditingPersonCategoryController;
+use App\Http\Controllers\EditingPersonController;
 use App\Http\Controllers\JurnalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,9 +29,26 @@ Route::controller(JurnalController::class)->prefix('jurnals')->group(function ()
     Route::get('/',  'index');
     Route::post('/', 'store');
     Route::get('/{id}',  'show');
-    Route::patch('/{id}', 'update');
+    Route::post('/{id}', 'update');
     Route::delete('/{id}', 'destroy');
-    Route::get('/document/{id}/{document_name}', 'document');
-    Route::get('/document/download/{id}/{document_name}', 'documentDownload');
-    Route::get('/image/{id}/{image_name}', 'getImage');
+    Route::get('/document/{id}', 'document');
+    Route::get('/document/download/{id}', 'documentDownload');
+    Route::get('/image/{id}', 'getImage');
+});
+Route::controller(EditingPersonCategoryController::class)->prefix('editing_categories')->group(function () {
+    Route::get('/',  'index');
+    Route::post('/', 'store');
+    Route::get('/{id}',  'show');
+    Route::put('/{id}', 'update');
+    Route::delete('/{id}', 'destroy');
+    Route::get('/persone/{id}', 'persons');
+});
+Route::controller(EditingPersonController::class)->prefix('editing_persons')->group(function () {
+    Route::get('/',  'index');
+    Route::post('/', 'store');
+    Route::get('/{id}',  'show');
+    Route::post('/{id}', 'update');
+    Route::delete('/{id}', 'destroy');
+    Route::get('/category/{id}', 'categoryPersonShow');
+    Route::get('/image/{id}', 'getImage');
 });
