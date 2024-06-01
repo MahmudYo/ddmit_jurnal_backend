@@ -114,13 +114,17 @@ class JurnalController extends Controller
             return response()->json(['message' => 'image jurnal not found'], 404);
         }
     }
-    public function documentDownload(string $id, string $document_name)
+    public function documentDownload(string $id)
     {
         $jurnal = Jurnal::find($id);
         if ($jurnal) {
-            return response()->download(storage_path('app/public/jurnals/documents/' . $document_name));
+            return response()->download(storage_path('app/public/jurnals/documents/' . $jurnal->jurnal));
         } else {
             return response()->json(['message' => 'jurnal not found'], 404);
         }
+    }
+    public function filterYear(int $year)
+    {
+        return response()->json(Jurnal::where('year', $year)->paginate());
     }
 }

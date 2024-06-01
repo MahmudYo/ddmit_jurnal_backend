@@ -15,6 +15,11 @@ class EditingPersonCategoryController extends Controller
     {
         $category = EditingPersonCategory::with('persons')->get();
         $generalRole = EditingPerson::where('role', 'rector')->first();
+        if ($generalRole) {
+            $category = $category->sortByDesc(function ($category) use ($generalRole) {
+                return $category->persons->contains('id', $generalRole->id);
+            })->values();
+        }
         return response()->json(['category' => $category, 'rector' => $generalRole]);
     }
 
@@ -27,7 +32,7 @@ class EditingPersonCategoryController extends Controller
             'category' => 'required'
         ]);
         if ($validate) {
-            $category = EditingPersonCategory::firstOrCreate([
+            $category = EditingPersonCategory::with('persons')->firstOrCreate([
                 'category' => $request['category'],
             ]);
             if ($category->wasRecentlyCreated) {
@@ -64,8 +69,14 @@ class EditingPersonCategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        $is_delete =  EditingPersonCategory::find($id)->delete();
-        if ($is_delete) {
+        $idsDelete = [];
+        $is_delete_category =  EditingPersonCategory::find($id)->delete();
+        $persons = EditingPerson::where('category_id', $id)->get();
+        foreach ($persons as $person) {
+            array_push($idsDelete, $person->id);
+        }
+        $is_delete_persons = EditingPerson::whereIn('category_id', $idsDelete)->delete();
+        if ($is_delete_category && $is_delete_persons) {
             return response()->json(['message' => 'category deleted'], 200);
         } else {
             return response()->json(['message' => 'category not deleted'], 201);
