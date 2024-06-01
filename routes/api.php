@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EditingPersonCategoryController;
 use App\Http\Controllers\EditingPersonController;
 use App\Http\Controllers\JurnalController;
+use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -65,4 +66,11 @@ Route::controller(EditingPersonController::class)->prefix('editing_persons')->gr
     Route::delete('/{id}', 'destroy');
     Route::get('/category/{id}', 'categoryPersonShow');
     Route::get('/image/{id}', 'getImage');
+});
+Route::controller(RequirementController::class)->prefix('requirements')->group(function () {
+    Route::get('/',  'index');
+    Route::post('/', 'store');
+    Route::get('/{id}',  'show');
+    Route::post('/{id}', 'update');
+    Route::delete('/{id}', 'destroy');
 });
