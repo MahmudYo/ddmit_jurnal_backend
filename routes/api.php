@@ -3,9 +3,11 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EditingPersonCategoryController;
 use App\Http\Controllers\EditingPersonController;
+use App\Http\Controllers\ForgetController;
 use App\Http\Controllers\JurnalController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,9 +36,10 @@ Route::group([
     Route::post('register', 'AuthController@register');
 });
 
-Route::get('/ok', [AuthController::class, 'ok']);
 Route::get('/search/{query}', [SearchController::class, 'search']);
 
+Route::post('/users/find/{username}', [UserController::class, 'passwordWithUsername']);
+Route::post('/users/{id}', [UserController::class, 'update']);
 
 
 Route::controller(JurnalController::class)->prefix('jurnals')->group(function () {
